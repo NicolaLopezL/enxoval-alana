@@ -1,0 +1,13 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "enxoval": {
+      ".read": true,
+      "$id": {
+        ".write": true,
+        ".validate": "$id.matches(/^ALN-[0-9]{3}$/) && newData.hasChildren(['status','por','em']) && (newData.child('status').val() === 'feito' || newData.child('status').val() === 'fazendo') && newData.child('por').isString() && newData.child('por').val().length <= 40"
+      }
+    }
+  }
+}
