@@ -14,7 +14,7 @@ main{max-width:720px;margin:auto;padding:8px 10px 60px}h2{font-size:16px;margin:
 .card{background:#fff;border-radius:12px;padding:12px;margin:10px 0;box-shadow:0 1px 3px #0001;border-left:5px solid transparent}
 .card.fazendo{border-left-color:#f0a020}.card.feito{opacity:.55;border-left-color:#2e9e4f}
 .top{display:flex;gap:6px;font-size:11px;align-items:center}.id{color:#888;font-weight:700}.pr{border-radius:8px;padding:0 6px}
-.p-Ess{background:#ffd9a8}.p-Úti{background:#d6ecff}.p-Opc{background:#eee}.ent{margin-left:auto;color:#666}
+.p-Ess{background:#ffd9a8}.p-Úti{background:#d6ecff}.p-Opc{background:#eee}.nv{background:#c2185b;color:#fff}.ent{margin-left:auto;color:#666}
 img{display:block;width:100%;max-height:240px;object-fit:contain;margin:6px 0}
 .f{display:flex;align-items:center;gap:8px;border-top:1px solid #f1e4e8;padding:6px 0}.k{width:80px;flex:none;font-size:12px;color:#888}
 .v{flex:1;min-width:0;font-size:14px;overflow-wrap:anywhere}
@@ -26,7 +26,8 @@ button.sec{background:#555}button.ok{background:#2e9e4f}button.wip{background:#f
 <header><h1>Enxoval da Alana · cadastro no Styli</h1>
 <div class="row">Seu nome: <input id="nome" maxlength="40" placeholder="ex.: Ana"><span id="sync" class="sync off">Conectando…</span></div>
 <div class="row"><div class="bar"><i id="barra"></i></div><span id="cont"></span>
-<label class="fl"><input type="checkbox" id="esconder"> esconder cadastrados</label></div></header>
+<label class="fl"><input type="checkbox" id="esconder"> esconder cadastrados</label>
+<label class="fl"><input type="checkbox" id="novos" checked> só os novos (ALN-076 em diante)</label></div></header>
 <main id="lista"><p>Carregando…</p></main>
 <script src="config.js"></script>
 <script type="module">
@@ -34,20 +35,20 @@ const $=s=>document.querySelector(s); const esc=s=>String(s??'').replace(/[&<>"'
 let estado={}; let salvarEstado=async()=>{}; let ITENS=[], CATS=[];
 const nomeEl=$('#nome'); try{nomeEl.value=localStorage.getItem('alana-nome')||''}catch(e){}
 nomeEl.onchange=()=>{try{localStorage.setItem('alana-nome',nomeEl.value.trim())}catch(e){}};
-$('#esconder').onchange=render;
+$('#esconder').onchange=render;$('#novos').onchange=render;const novo=it=>+it.id.slice(4)>=76;
 
 function campo(rot,val){if(val===''||val==null)return'';return `<div class="f"><span class="k">${rot}</span><span class="v">${esc(val)}</span><button data-copy="${esc(val)}">Copiar</button></div>`}
 function card(it){const s=estado[it.id];const cls=s?s.status:'';
  const st=s?(s.status==='feito'?`✅ Cadastrado por ${esc(s.por)}`:`⏳ ${esc(s.por)} está cadastrando`):'';
- return `<div class="card ${cls}" id="${it.id}"><div class="top"><span class="id">${it.id}</span><span class="pr p-${it.prio.slice(0,3)}">${it.prio}</span><span class="ent">Entrega ${esc(it.entrega)}</span></div>
+ return `<div class="card ${cls}" id="${it.id}"><div class="top"><span class="id">${it.id}</span><span class="pr p-${it.prio.slice(0,3)}">${it.prio}</span>${novo(it)?'<span class="pr nv">NOVO</span>':''}<span class="ent">Entrega ${esc(it.entrega)}</span></div>
  <img src="fotos/${it.id}.jpg" alt="${esc(it.nome)}" loading="lazy">
  <div class="acts"><button class="sec" data-foto="${it.id}">Salvar foto</button></div>
  ${campo('Nome',it.nome)}${campo('Preço',it.preco)}${campo('Quantidade',it.qtd)}${campo('Tamanho',it.tam)}${campo('Material',it.mat)}${campo('Loja',it.loja)}${campo('Link',it.link)}
  <div class="obs">${esc(it.obs)}</div><div class="st">${st}</div>
  <div class="acts"><button class="wip" data-st="fazendo" data-id="${it.id}">${s&&s.status==='fazendo'?'Desmarcar':'Estou cadastrando'}</button>
  <button class="ok" data-st="feito" data-id="${it.id}">${s&&s.status==='feito'?'Desfazer':'Já cadastrei no Styli'}</button></div></div>`}
-function render(){const hide=$('#esconder').checked;let html='';
- for(const c of CATS){const xs=ITENS.filter(i=>i.cat===c&&!(hide&&estado[i.id]?.status==='feito'));if(!xs.length)continue;
+function render(){const hide=$('#esconder').checked,soNovos=$('#novos').checked;let html='';
+ for(const c of CATS){const xs=ITENS.filter(i=>i.cat===c&&!(hide&&estado[i.id]?.status==='feito')&&!(soNovos&&!novo(i)));if(!xs.length)continue;
   html+=`<h2>${esc(c)} <small>(${xs.length})</small></h2>`+xs.map(card).join('')}
  $('#lista').innerHTML=html||'<p>Tudo cadastrado! 🎉</p>';
  const n=ITENS.filter(i=>estado[i.id]?.status==='feito').length;$('#cont').textContent=`${n} de ${ITENS.length}`;$('#barra').style.width=(100*n/ITENS.length)+'%'}
